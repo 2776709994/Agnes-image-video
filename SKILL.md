@@ -1,6 +1,6 @@
 ---
 name: agnes-ai
-description: 调用 Agnes AI（国内版 API）生成图像和视频的 skill。当用户要求生成图片/图像/海报/插画，或对已有图片进行编辑/风格迁移/多图合成，或生成视频/动画片段时使用。图像模型 agnes-image-2.1-flash（文生图，高信息密度）与 agnes-image-2.0-flash（图生图/多图合成，编辑能力强），视频模型 agnes-video-v2.0（文生视频/图生视频/关键帧动画）。按场景默认推荐模型，用户点名时直接用指定模型。详细使用指南见 README.md。
+description: 调用 Agnes AI（国内版 API）生成图像和视频的 skill。当用户要求生成图片/图像/海报/插画，或对已有图片进行编辑/风格迁移/多图合成，或生成视频/动画片段时使用。图像统一默认 agnes-image-2.1-flash（文生图/图生图/多图合成，高信息密度；agnes-image-2.0-flash 为可选项），视频模型 agnes-video-v2.0（文生视频/图生视频/关键帧动画）。按场景默认推荐模型，用户点名时直接用指定模型。详细使用指南见 README.md。
 ---
 
 # Agnes AI — 图像与视频生成（国内版 API）
@@ -31,10 +31,10 @@ Agnes AI 提供 OpenAI 兼容协议的图像与视频生成 HTTP API。当用户
 | 场景 | 默认推荐模型 | 说明 |
 | --- | --- | --- |
 | 文生图 | `agnes-image-2.1-flash` | 升级版，高信息密度、复杂构图；尺寸用 1K/2K/3K/4K 档位 + ratio |
-| 图生图 / 图像编辑 / 多图合成 | `agnes-image-2.0-flash` | 图像编辑能力强（Artificial Analysis 编辑榜 ELO 1184）；尺寸用 1024x768 这类精确写法 |
+| 图生图 / 图像编辑 / 多图合成 | `agnes-image-2.1-flash` | 2.1 同样支持全部图像工作流（用户要求；如需可选 `agnes-image-2.0-flash`，编辑榜 ELO 1184，用 1024x768 这类精确尺寸） |
 | 文生视频 / 图生视频 / 关键帧动画 | `agnes-video-v2.0` | 异步任务 API，脚本自动轮询 |
 
-用户说"用 2.1 做图生图"或"换 2.0 试试"等明确指定时，通过 `--model` 传给脚本即可，不要纠正用户。
+**图像场景一律默认 2.1**。用户说"换 2.0 试试"等明确指定时，通过 `--model` 传给脚本即可，不要纠正用户。
 
 ## 使用方法
 
@@ -47,22 +47,22 @@ python3 scripts/generate.py image \
   --size "2K" --ratio "16:9" \
   --output "<output_path.png>"
 
-# 图生图 / 图像编辑（默认 agnes-image-2.0-flash）
+# 图生图 / 图像编辑（图像默认 agnes-image-2.1-flash）
 python3 scripts/generate.py image \
   --prompt "<编辑指令>" \
   --image "<输入图片路径或URL>" \
-  --size "1024x768" \
+  --size "2K" \
   --output "<output_path.png>"
 
-# 多图合成（默认 agnes-image-2.0-flash）
+# 多图合成（图像默认 agnes-image-2.1-flash）
 python3 scripts/generate.py image \
   --prompt "<合成指令>" \
   --image "url_or_path_1" "url_or_path_2" \
-  --size "1024x1024" \
+  --size "1K" \
   --output "<output_path.png>"
 
-# 用户指定模型时
-python3 scripts/generate.py image --prompt "..." --model "agnes-image-2.1-flash" --image "in.png" --size "2K" --output "out.png"
+# 用户指定模型时（例如改用 2.0）
+python3 scripts/generate.py image --prompt "..." --model "agnes-image-2.0-flash" --image "in.png" --size "1024x768" --output "out.png"
 
 # 文生视频（默认 agnes-video-v2.0，自动轮询直到完成）
 python3 scripts/generate.py video \

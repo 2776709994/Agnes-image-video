@@ -10,11 +10,11 @@
 
 | 能力 | 模型 | 说明 |
 | --- | --- | --- |
-| 文生图 | `agnes-image-2.1-flash` | 高信息密度、复杂构图优化；支持 1K–4K 档位 × 8 种宽高比 |
-| 图生图 / 图像编辑 / 多图合成 | `agnes-image-2.0-flash` | 图像编辑能力强（Artificial Analysis 编辑榜 Top 20）；本地图片自动转 Data URI 上传 |
+| 文生图 | `agnes-image-2.1-flash`（默认） | 高信息密度、复杂构图优化；支持 1K–4K 档位 × 8 种宽高比 |
+| 图生图 / 图像编辑 / 多图合成 | `agnes-image-2.1-flash`（默认） | 2.1 支持全部图像工作流；本地图片自动转 Data URI 上传。可选 `agnes-image-2.0-flash`（编辑榜 Top 20，用精确尺寸） |
 | 文生视频 / 图生视频 | `agnes-video-v2.0` | 异步任务自动轮询；支持时长、分辨率、反向提示词、随机种子 |
 
-- **自动选模型**：按场景默认推荐（文生图→2.1，图生图→2.0，视频→v2.0）；你点名模型时直接用你指定的
+- **自动选模型**：图像场景一律默认 `agnes-image-2.1-flash`，视频默认 `agnes-video-v2.0`；你点名模型时直接用你指定的（如图生图想用 2.0，说一声即可）
 - **零依赖**：调用脚本只用 Python 3 标准库，不需要 pip install 任何东西
 - **异步视频自动等待**：提交任务后自动轮询直到完成并下载 mp4
 
@@ -84,10 +84,10 @@ python3 scripts/generate.py image \
   --size "2K" --ratio "16:9" \
   --output "city.png"
 
-# 图生图（默认 agnes-image-2.0-flash）
+# 图生图（图像默认 agnes-image-2.1-flash）
 python3 scripts/generate.py image \
   --prompt "转成水彩风格，保留原构图" \
-  --image "photo.jpg" --size "1024x1024" \
+  --image "photo.jpg" --size "1K" \
   --output "watercolor.png"
 
 # 文生视频（默认 agnes-video-v2.0，自动轮询）
@@ -120,6 +120,34 @@ python3 scripts/generate.py video \
 | `--frame-rate` | 帧率 1–60 | `24` |
 | `--negative-prompt` | 反向提示词 | — |
 | `--seed` | 随机种子，复现结果 | — |
+
+## 切换默认模型（进阶）
+
+### 临时切换（不修改任何文件）
+
+- **对话里**：直接点名模型，例如"用 agnes-image-2.0-flash 做图生图"，AI 会用 `--model` 参数执行
+- **命令行**：加 `--model` 参数覆盖当次调用
+
+```bash
+python3 scripts/generate.py image --prompt "..." --model "agnes-image-2.0-flash" --image in.png --size "1024x768" --output out.png
+```
+
+### 永久修改默认模型
+
+默认模型定义在 `scripts/generate.py` 顶部的三个常量（约第 40 行），改值即生效：
+
+```python
+DEFAULT_IMAGE_MODEL = "agnes-image-2.1-flash"   # 图像默认（文生图/图生图/多图合成）
+FALLBACK_IMAGE_MODEL = "agnes-image-2.0-flash"  # 图像备选（--model 指定时用）
+DEFAULT_VIDEO_MODEL = "agnes-video-v2.0"        # 视频默认
+```
+
+修改时注意两点：
+
+1. **尺寸写法要跟着模型走**：2.1 用档位（`1K`/`2K` + `--ratio`），2.0 用精确像素（`1024x768`）。若把图像默认改成 2.0，建议同时把 CLI 的 `--size` 默认值从 `1K` 改为 `1024x1024`。
+2. **文档要同步**：`SKILL.md` 的"模型选择"表格是 AI 助手运行时读取的指引，只改脚本不改它，AI 仍会按旧文档描述行为。`README.md` 的"功能特性"表格也建议一并更新。
+
+如果你把 skill 复制到了 WorkBuddy skills 目录，运行的是那份拷贝——改完记得同步覆盖过去。
 
 ## 限额说明（免费用户）
 

@@ -12,8 +12,9 @@ Usage:
                            [--model MODEL] --output path.mp4
 
 Models (user-selectable via --model, defaults recommended):
-  agnes-image-2.1-flash  image, DEFAULT for text-to-image (tier sizes 1K-4K + ratio)
-  agnes-image-2.0-flash  image, DEFAULT for image-to-image / multi-image (exact WxH sizes)
+  agnes-image-2.1-flash  image, DEFAULT for ALL image tasks (text-to-image, image-to-image,
+                         multi-image); tier sizes 1K-4K + ratio recommended
+  agnes-image-2.0-flash  image, optional alternative (exact WxH sizes)
   agnes-video-v2.0       video (text-to-video, image-to-video, keyframes)
 
 API key resolution order:
@@ -36,8 +37,8 @@ import urllib.parse
 API_BASE = "https://api.agnes-ai.cn/v1"
 API_ROOT = "https://api.agnes-ai.cn"
 
-DEFAULT_T2I_MODEL = "agnes-image-2.1-flash"
-DEFAULT_I2I_MODEL = "agnes-image-2.0-flash"
+DEFAULT_IMAGE_MODEL = "agnes-image-2.1-flash"  # default for ALL image tasks (t2i + i2i)
+FALLBACK_IMAGE_MODEL = "agnes-image-2.0-flash"  # optional alternative via --model
 DEFAULT_VIDEO_MODEL = "agnes-video-v2.0"
 
 VALID_RATIOS = ["1:1", "3:4", "4:3", "16:9", "9:16", "2:3", "3:2", "21:9"]
@@ -144,15 +145,15 @@ def resolve_image(image_arg):
 def generate_image(prompt, size, ratio, output_path, images=None, model=None):
     """Generate an image.
 
-    Defaults: text-to-image -> agnes-image-2.1-flash (use tier size like 2K + ratio);
-    image-to-image / multi-image -> agnes-image-2.0-flash (use exact WxH size).
-    User can override with --model.
+    Default: agnes-image-2.1-flash for ALL image tasks (text-to-image,
+    image-to-image, multi-image). User can override with --model
+    (e.g. agnes-image-2.0-flash).
     """
     if images:
-        selected_model = model if model else DEFAULT_I2I_MODEL
+        selected_model = model if model else DEFAULT_IMAGE_MODEL
         print("Using model (image-to-image): " + selected_model)
     else:
-        selected_model = model if model else DEFAULT_T2I_MODEL
+        selected_model = model if model else DEFAULT_IMAGE_MODEL
         print("Using model (text-to-image): " + selected_model)
 
     print("Generating image: " + prompt[:80] + ("..." if len(prompt) > 80 else ""))
@@ -314,8 +315,8 @@ def main():
     img.add_argument("--image", nargs="+", default=None,
                      help="Input image URL(s) or local path(s) for image-to-image / multi-image")
     img.add_argument("--model", default=None,
-                     help="Override model (default: agnes-image-2.1-flash for text-to-image, "
-                          "agnes-image-2.0-flash for image-to-image)")
+                     help="Override model (default: agnes-image-2.1-flash for all image tasks; "
+                          "agnes-image-2.0-flash available as alternative)")
     img.add_argument("--output", required=True, help="Output file path")
 
     # Video subcommand
