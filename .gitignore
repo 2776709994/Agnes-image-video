@@ -1,0 +1,9 @@
+# 敏感信息：绝不提交 API Key
+scripts/api_key
+
+# 工作区内部数据
+.workbuddy/
+
+# Python 缓存
+__pycache__/
+*.pyc
